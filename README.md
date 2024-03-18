@@ -10,7 +10,7 @@ The following pipeline first uses WhatsHap to create phase sets from individual 
 
 ### Splitting the VCF into chromosomes
 
-To divide my VCF into single chromosome VCFs I ran a custom bash script [pop_chr_vcf_split.sh](). The chromosomes I decided to keep are the larger ones: 18 autosomes and the X and Y chromosomes.
+To divide my VCF into single chromosome VCFs I ran a custom bash script [chr_vcf_split.sh](). The chromosomes I decided to keep are the larger ones: 18 autosomes and the X and Y chromosomes.
 
 ```bash
 sbatch  -c 10 --mem=20GB -t 01:00:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/chr_vcf_split.sh /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20.vcf /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/reference_genomes/lynx_pardinus_mLynPar1.2/mLynPar1.2.big_chromosomes.bed
