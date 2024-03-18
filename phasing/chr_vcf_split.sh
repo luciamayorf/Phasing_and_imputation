@@ -25,5 +25,5 @@ chr_list=${2}
 # split VCF into single chrs
 for chr in $(cut -f1 ${chr_list}[@]) ; do
     echo "extracting ${chr} from VCF"
-    bedtools intersect -header -a ${input_vcf} -b <(grep -w ${chr} ${chr_list}) > ${vcf_dir}/chr_vcfs/${vcf_basename}_${chr}.vcf
+    bedtools intersect -header -a ${input_vcf} -b <(grep -w "${chr}" ${chr_list}) > ${vcf_dir}/chr_vcfs/${vcf_basename}_${chr}.vcf
 done
