@@ -17,13 +17,14 @@ vcf_dir=$(dirname ${input_vcf})
 mkdir -p ${vcf_dir}/chr_vcfs
 
 # define input vcf basename
-vcf_basename=$(basename ${input_vcf})
+vcf_basename=$(basename ${input_vcf} .vcf)
 
 # define list of chromosomes
 chr_list=${2}
 
 # split VCF into single chrs
-for chr in $(cut -f1 ${chr_list}[@]) ; do
+for chr in $(cut -f1 ${chr_list}) ; do
     echo "extracting ${chr} from VCF"
-    bedtools intersect -header -a ${input_vcf} -b <(grep -w "${chr}" ${chr_list}) > ${vcf_dir}/chr_vcfs/${vcf_basename}_${chr}.vcf
+    chr_name=$(echo "${chr}" | cut -d'_' -f2-)
+    bedtools intersect -header -a ${input_vcf} -b <(grep -w "${chr}" ${chr_list}) > ${vcf_dir}/chr_vcfs/${vcf_basename}_${chr_name}.vcf
 done
