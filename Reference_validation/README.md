@@ -39,7 +39,7 @@ We will generate a BAM file with the 3 different coverages (0.5X, 1X and 2X) for
 
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/*_sorted_rg_merged_sorted_rmdup_indelrealigner.bam); do 
-  job_id=$(sbatch -c 5 --mem=10GB -t 00:30:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/downsampling_samtools.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/mosdepth/downsampling_factor_table.txt | awk '{print $4}')
+  job_id=$(sbatch -c 5 --mem=10GB -t 00:45:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/downsampling_samtools.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/mosdepth/downsampling_factor_table.txt | awk '{print $4}')
     echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/downsampling/job_ids_downsampling_samtools.txt
 done
 ```
@@ -52,7 +52,7 @@ I run mosdepth to get the coverage with the same script as before ([mean_cov_mos
 
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*.bam); do 
-  job_id=$(sbatch -c 5 --mem=10GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/mean_cov_mosdepth.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/mosdepth | awk '{print $4}')
+  job_id=$(sbatch -c 5 --mem8GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/mean_cov_mosdepth.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/mosdepth | awk '{print $4}')
     echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/mosdepth/job_ids_mean_cov_mosdepth.txt
 done
 ```
@@ -60,7 +60,7 @@ done
 I then perform a bam quality control with qualimap by running the script [bams_qualimap.sh](https://github.com/luciamayorf/Data_preprocessing_alignment_v2/blob/main/scripts/bams_qualimap.sh)
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*.bam); do
-  job_id=$(sbatch -c 10 --mem=20GB -t 06:00:00 /home/csic/eye/lmf/scripts/Data_preprocessing_alignment/bams_qualimap.sh ${input_bam} | awk '{print $4}')
+  job_id=$(sbatch -c 5 --mem=10GB -t 00:20:00 /home/csic/eye/lmf/scripts/Data_preprocessing_alignment/bams_qualimap.sh ${input_bam} | awk '{print $4}')
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/qualimap/job_ids_qualimap_dpwmsampling.txt
 done
 ```
