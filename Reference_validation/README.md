@@ -57,7 +57,7 @@ for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome
 done
 ```
 
-I then perform a bam quality control with qualimap by running the script [bams_qualimap.sh]()
+I then perform a bam quality control with qualimap by running the script [bams_qualimap.sh](https://github.com/luciamayorf/Data_preprocessing_alignment_v2/blob/main/scripts/bams_qualimap.sh)
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*.bam); do
   job_id=$(sbatch -c 10 --mem=20GB -t 06:00:00 /home/csic/eye/lmf/scripts/Data_preprocessing_alignment/bams_qualimap.sh ${input_bam} | awk '{print $4}')
