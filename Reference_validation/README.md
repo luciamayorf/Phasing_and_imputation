@@ -64,3 +64,5 @@ for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/qualimap/job_ids_qualimap_dpwmsampling.txt
 done
 ```
+
+Finally, I run multiqc to visualize the results.
