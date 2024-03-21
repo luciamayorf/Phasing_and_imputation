@@ -30,7 +30,7 @@ ds_list=${2}
 sample=$(echo "${bam_basename}" | cut -f1,2 -d'_')
 
 # Define the downsampling factors:
-target_2=$(grep -w "${sample}" ${ds_list} | cut -f5)q
+target_2=$(grep -w "${sample}" ${ds_list} | cut -f5)
 target_1=$(grep -w "${sample}" ${ds_list} | cut -f4)
 target_0_5=$(grep -w "${sample}" ${ds_list} | cut -f3)
 
