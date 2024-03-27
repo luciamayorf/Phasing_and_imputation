@@ -33,7 +33,7 @@ sbatch  -c 5 --mem=5GB -t 00:30:00 /home/csic/eye/lmf/scripts/Phasing_and_imputa
 
 ### Generate Phase sets with WhatsHap
 
-For a more precise phasing, we first run the software WhatsHap using the --tag=PS (see link). Phase sets were generated from the VCF of each chromosome of each population by running in parallel a custom script pop_chr_vcf_whatshap.sh <input_vcf> <bams_directory>.
+For a more precise phasing, we first run the software WhatsHap using the --tag=PS (see link). Phase sets were generated from the VCF of each chromosome of each population by running in parallel a custom script [chr_vcf_whatshap](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/phasing/chr_vcf_whatshap.sh) <input_vcf> <bams_directory>.
 
 ```bash
 for input_vcf in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/chr_vcfs/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss_originalnames_*.vcf); do 
@@ -42,4 +42,15 @@ for input_vcf in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome
 done
 ```
 
+
+### Phase using SHAPEIT4
+
+The data is now ready to be phased using SHAPEIT4. To do so in parallel, I used a custom made script [chr_vcf_shapeit.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/phasing/chr_vcf_shapeit.sh) that runs SHAPEIT4 for each chromosome, zipping the file and indexing it (necessary to run SHAPEIT4). MCMC iterations were set to "10b,1p,1b,1p,1b,1p,1b,1p,10m" as suggested by the SHAPEIT4 manual.
+
+```bash
+for input_vcf in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/chr_vcfs/*_ps.vcf); do 
+  job_id=$(sbatch /home/csic/eye/lmf/scripts/Phasing_and_imputation/chr_vcf_shapeit.sh ${input_vcf} | awk '{print $4}')
+    echo "${job_id} ${input_vcf}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/phasing/job_ids_chr_vcf_shapeit_novogene_lp_sept2023.txt
+done 
+``` 
 
