@@ -33,7 +33,7 @@ sbatch  -c 5 --mem=5GB -t 00:30:00 /home/csic/eye/lmf/scripts/Phasing_and_imputa
 
 ### Generate Phase sets with WhatsHap
 
-For a more precise phasing, we first run the software WhatsHap using the --tag=PS (see link). Phase sets were generated from the VCF of each chromosome of each population by running in parallel a custom script [chr_vcf_whatshap](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/phasing/chr_vcf_whatshap.sh) <input_vcf> <bams_directory>.
+For a more precise phasing, we first run the software WhatsHap using the --tag=PS (see link). Phase sets were generated from the VCF of each chromosome of each population by running in parallel a custom script [chr_vcf_whatshap.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/phasing/chr_vcf_whatshap.sh) <input_vcf> <bams_directory>.
 
 ```bash
 for input_vcf in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/chr_vcfs/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss_originalnames_*.vcf); do 
@@ -41,7 +41,6 @@ for input_vcf in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome
     echo "${job_id} ${input_vcf}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/phasing/job_ids_chr_vcf_whatshap_novogene_lp_sept2023.txt
 done
 ```
-
 
 ### Phase using SHAPEIT4
 
@@ -52,5 +51,20 @@ for input_vcf in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome
   job_id=$(sbatch /home/csic/eye/lmf/scripts/Phasing_and_imputation/chr_vcf_shapeit.sh ${input_vcf} | awk '{print $4}')
     echo "${job_id} ${input_vcf}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/phasing/job_ids_chr_vcf_shapeit_novogene_lp_sept2023.txt
 done 
-``` 
+```
+We decide to keep the imputed missing data in the reference panel. If some day we want to call those genotypes as missing, check Enrico's [gt_masker_pop_chr_vcf.sh](https://github.com/Enricobazzi/Lynxtrogression/blob/main/scripts/phasing/gt_masker_pop_chr_vcf.sh) script.
 
+
+### Phased VCF merging
+
+Now we will merge all the chromosomes files to obtain a final VCF with all the phased variants (a total of 1324598 SNPs).
+```bash
+module load bcftools
+vcf-concat $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/chr_vcfs/phasing/ | grep -v "ChrY") > ./../../c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss_originalnames.phased.vcf
+```
+
+I change again the names of the VCF file so that they have the correct names:
+```bash
+bcftools reheader -s <(sort -k2 /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/FASTQ_files/novogene_lp_sept2023/fastq_samples_list.txt | cut -f2 | uniq) -o c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss_originalnames.phased.vcf
+```
+---
