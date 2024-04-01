@@ -52,7 +52,7 @@ for input_vcf in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome
     echo "${job_id} ${input_vcf}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/phasing/job_ids_chr_vcf_shapeit_novogene_lp_sept2023.txt
 done 
 ```
-We decide to keep the imputed missing data in the reference panel. If some day we want to call those genotypes as missing, check Enrico's [gt_masker_pop_chr_vcf.sh](https://github.com/Enricobazzi/Lynxtrogression/blob/main/scripts/phasing/gt_masker_pop_chr_vcf.sh) script.
+We decide to keep the imputed genotypes. In the end, we are interested in providing a set of reference haplotypes. Therefore, missing genotypes only represent alternative haplotypes that would not be present in the reference panel, and would therefore be impossible to impute. In conclusion, the final set of reference haplotypes will be the similar with or without the missing genotypes. If at some point we are interested in setting those genotypes as missing for downstream analysis, check Enrico's [gt_masker_pop_chr_vcf.sh](https://github.com/Enricobazzi/Lynxtrogression/blob/main/scripts/phasing/gt_masker_pop_chr_vcf.sh) script.
 
 
 ### Phased VCF merging
