@@ -94,7 +94,7 @@ tabix -s1 -b2 -e2 c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss
 Then I can compute the GLs using BCFtools with the custom script [gl_bcftools.sh]() <input_bam> <reference_vcf> <output_directory>.
 ```{bash}
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/pool_epil_all/*_mLynPar1.2_ref_sorted_rg_merged_sorted_rmdup_indelrealigner.bam); do
-  job_id=$(sbatch --mem=2GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss_originalnames.phased.vcf.gz /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_all/genotypes_likelihoods | awk '{print $4}')
+  job_id=$(sbatch --mem=2GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf.gz /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_all/genotypes_likelihoods | awk '{print $4}')
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_gl_bcftools.txt
 done
 ```
