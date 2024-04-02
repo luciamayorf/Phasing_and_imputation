@@ -71,4 +71,33 @@ bcftools reheader -s <(sort -k2 /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/l
 bgzip c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf > c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf.gz
 tabix -p vcf c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf
 ```
+
 ---
+
+## 2. Imputation with GLIMPSE
+
+### Computation of genotypes likelihoods
+
+Before proceeding with imputation, I need to calculate the genotype likelihoods (GLs) of the targeted variants in our samples. For that, I will use [BCFtools](https://samtools.github.io/bcftools/bcftools.html#mpileup) mpileup and call, following [GLIMPSE manual](https://odelaneau.github.io/GLIMPSE/glimpse1/tutorial_b38.html#run_preliminaries) recommendations.
+
+For that, I first need to generate and index a TSV file of the reference panel VCF. 
+```bash
+module load samtools/1.19
+
+# Generate the TSV file
+bcftools query -f'%CHROM\t%POS\t%REF,%ALT\n' c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf.gz | bgzip -c > c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.tsv.gz
+
+# Index the TSV file
+tabix -s1 -b2 -e2 c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.tsv.gz
+```
+
+Then I can compute the GLs using BCFtools with the custom script [gl_bcftools.sh]() <input_bam> <reference_vcf> <output_directory>.
+```{bash}
+for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/pool_epil_all/*_mLynPar1.2_ref_sorted_rg_merged_sorted_rmdup_indelrealigner.bam); do
+  job_id=$(sbatch --mem=2GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss_originalnames.phased.vcf.gz /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_all/genotypes_likelihoods | awk '{print $4}')
+  echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_gl_bcftools.txt
+done
+```
+
+
+
