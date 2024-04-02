@@ -78,7 +78,7 @@ For that, I first need to generate different VCF files, one for each sample extr
 sbatch -c 1 --mem=1GB -t 00:20:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/sample_removal_vcf_downsampling.sh /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf.gz
 ```
 
-Now we can compute the GLs using BCFtools with the custom script [gl_bcftools_downsampled.sh]() <input_bam> <vcf_tsv_directory>. I run each coverage separately to avoid exceeding CESGA jobs launching limits.
+Now we can compute the GLs using BCFtools with the custom script [gl_bcftools_downsampled.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/gl_bcftools_downsampled.sh) <input_bam> <vcf_tsv_directory>. I run each coverage separately to avoid exceeding CESGA jobs launching limits.
 
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*0_5x.bam); do
