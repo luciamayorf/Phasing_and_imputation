@@ -71,7 +71,7 @@ Finally, I run multiqc to visualize the results.
 
 ## Computation of genotype likelihoods
 
-GLIMPSE requires input data to take the form of Genotype Likelihoods (GLs). GLs need to be computed at all target individuals and all variant sites present in the reference panel of haplotypes used for the imputation. We used BCFtools mpileup and call, as it was done in the [GLIMPSE manual](https://odelaneau.github.io/GLIMPSE/glimpse1/tutorial_b38.html#run_preliminaries). 
+GLIMPSE requires input data to take the form of Genotype Likelihoods (GLs). GLs need to be computed at all target individuals and all variant sites present in the reference panel of haplotypes used for the imputation. We used [BCFtools](https://samtools.github.io/bcftools/bcftools.html#mpileup) mpileup and call, as it was done in the [GLIMPSE manual](https://odelaneau.github.io/GLIMPSE/glimpse1/tutorial_b38.html#run_preliminaries). 
 
 For that, I first need to generate different VCF files, one for each sample extracted (that will serve as a reference panel for its downsampled BAM). I will run the custom script [sample_removal_vcf_downsampling.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/sample_removal_vcf_downsampling.sh) <input_vcf>, which also generates the TSV files necessary for bcftools to calculate the genotypes likelihoods.
 ```bash
