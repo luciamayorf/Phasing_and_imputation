@@ -72,6 +72,19 @@ bgzip c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf 
 tabix -p vcf c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf
 ```
 
+We need to retrieve the old header, where most information was stripped away during phasing, otherwise I can get some errors when running different tools. To "fix" the header we simply copy the pre-phased header, add the few new fields added during phasing, and finally add the phased part of the table.
+```bash
+# take pre-phased header
+grep "##" c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.vcf > c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf
+
+# add info and format added in phasing
+grep -E "##INFO|##FORMAT" c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf >> c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf
+
+# add phased vcf table
+grep -v "##" c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf >> c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf
+```
+
+
 ---
 
 ## 2. Imputation with GLIMPSE
