@@ -5,7 +5,7 @@
 #SBATCH -c 5
 #SBATCH --mem=20GB
 
-# This script will run WhatsHap for phase set tagging on the selected chromosome and population pair
+# This script will run WhatsHap for phase set tagging on the selected chromosome.
 
 # Usage of the script: chr_vcf_whatshap.sh <input_vcf> <bams_directory>
 
