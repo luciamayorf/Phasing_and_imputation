@@ -43,7 +43,7 @@ TSV=$(ls ${TARGETS_DIR} | grep "${SAMPLE_ID}" | grep "tsv.gz" | grep -v ".tbi")
 echo "TARGETS_DIR/TSV: ${TARGETS_DIR}/${TSV}"
 
 # Define the output directory
-OUT_DIR=$(echo "${TARGETS_DIR}/genotype_likelihoods")
+OUT_DIR=$(echo "${TARGETS_DIR}" | sed 's/ref_panels/genotype_likelihoods/g')
 mkdir -p ${OUT_DIR}
 echo "Output directory: ${OUT_DIR}"
 
