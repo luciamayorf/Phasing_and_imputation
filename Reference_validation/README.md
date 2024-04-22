@@ -75,24 +75,27 @@ GLIMPSE requires input data to take the form of Genotype Likelihoods (GLs). GLs 
 
 For that, I first need to generate different VCF files, one for each sample extracted (that will serve as a reference panel for its downsampled BAM). I will run the custom script [sample_removal_vcf_downsampling.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/sample_removal_vcf_downsampling.sh) <input_vcf>, which also generates the TSV files necessary for bcftools to calculate the genotypes likelihoods.
 ```bash
-sbatch -c 1 --mem=1GB -t 00:20:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/sample_removal_vcf_downsampling.sh /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf.gz
+sbatch --mem=1GB -t 00:20:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/sample_removal_vcf_downsampling.sh /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf.gz
+
+# I moved all the generated files to a new directory
+mv * ref_panels/
 ```
 
 Now we can compute the GLs using BCFtools with the custom script [gl_bcftools_downsampled.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/gl_bcftools_downsampled.sh) <input_bam> <vcf_tsv_directory>. I run each coverage separately to avoid exceeding CESGA jobs launching limits.
 
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*0_5x.bam); do
-  job_id=$(sbatch -c 2 --mem=2GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation | awk '{print $4}')
+  job_id=$(sbatch --mem=2GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation/ref_panels | awk '{print $4}')
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/downsampling/job_ids_gl_bcftools_downsampled.txt
 done
 
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*1x.bam); do
-  job_id=$(sbatch -c 2 --mem=2GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation | awk '{print $4}')
+  job_id=$(sbatch --mem=2GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation/ref_panels | awk '{print $4}')
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/downsampling/job_ids_gl_bcftools_downsampled.txt
 done
 
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*2x.bam); do
-  job_id=$(sbatch -c 2 --mem=2GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation | awk '{print $4}')
+  job_id=$(sbatch --mem=2GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation/ref_panels | awk '{print $4}')
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/downsampling/job_ids_gl_bcftools_downsampled.txt
 done
 ```
