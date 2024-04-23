@@ -99,3 +99,13 @@ for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/downsampling/job_ids_gl_bcftools_downsampled.txt
 done
 ```
+
+---
+
+ ## Reference panel imputation
+
+ Once the BAMs of the samples in the reference panel are downsampled to different target coverages and their GLs are computed, we can start using GLIMPSE to impute them.
+
+ ### Chunks definition
+
+ 
