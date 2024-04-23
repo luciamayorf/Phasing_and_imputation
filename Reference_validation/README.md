@@ -108,4 +108,10 @@ done
 
  ### Chunks definition
 
+ ### Phasing
+ ```bash
+sbatch -t 1-00:00:00 --mem 3GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/launch_phase_downsampling_
+ALL.sh # job ID: 6863781
+````
+
  
