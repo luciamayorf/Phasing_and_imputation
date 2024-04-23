@@ -28,6 +28,7 @@ for sample in ${samples}; do
 
     # Extract the sample and generate a new VCF file
     bcftools view -s ^${sample} -Oz -o ${output_vcf_dir}/no_${sample}_${input_basename}.vcf.gz ${input_vcf}
+    bcftools index ${output_vcf_dir}/no_${sample}_${input_basename}.vcf.gz
 
     # Generate the TSV file  
     bcftools query -f'%CHROM\t%POS\t%REF,%ALT\n' ${output_vcf_dir}/no_${sample}_${input_basename}.vcf.gz \
