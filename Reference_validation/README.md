@@ -13,7 +13,7 @@ To do so, we first need to calculate the proportion of reads that need to be sub
 
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/*_sorted_rg_merged_sorted_rmdup_indelrealigner.bam); do 
-  job_id=$(sbatch -c 16 --mem=10GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/mean_cov_mosdepth.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/mosdepth | awk '{print $4}')
+  job_id=$(sbatch -c 16 --mem=10GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/mean_cov_mosdepth.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/mosdepth | awk '{print $4}')
     echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/mosdepth/job_ids_mean_cov_mosdepth.txt
 done
 ```
@@ -39,7 +39,7 @@ We will generate a BAM file with the 3 different coverages (0.5X, 1X and 2X) for
 
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/*_sorted_rg_merged_sorted_rmdup_indelrealigner.bam); do 
-  job_id=$(sbatch -c 5 --mem=10GB -t 00:45:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/downsampling_samtools.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/mosdepth/downsampling_factor_table.txt | awk '{print $4}')
+  job_id=$(sbatch -c 5 --mem=10GB -t 00:45:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/downsampling_samtools.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/mosdepth/downsampling_factor_table.txt | awk '{print $4}')
     echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/downsampling/job_ids_downsampling_samtools.txt
 done
 ```
@@ -52,7 +52,7 @@ I run mosdepth to get the coverage with the same script as before ([mean_cov_mos
 
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*.bam); do 
-  job_id=$(sbatch -c 5 --mem8GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/mean_cov_mosdepth.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/mosdepth | awk '{print $4}')
+  job_id=$(sbatch -c 5 --mem8GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/mean_cov_mosdepth.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/mosdepth | awk '{print $4}')
     echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/mosdepth/job_ids_mean_cov_mosdepth.txt
 done
 ```
@@ -61,7 +61,7 @@ I then perform a bam quality control with qualimap by running the script [bams_q
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*.bam); do
   job_id=$(sbatch -c 5 --mem=10GB -t 00:20:00 /home/csic/eye/lmf/scripts/Data_preprocessing_alignment/bams_qualimap.sh ${input_bam} | awk '{print $4}')
-  echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/qualimap/job_ids_qualimap_dpwmsampling.txt
+  echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/qualimap/job_ids_qualimap_dowmsampling.txt
 done
 ```
 
@@ -75,7 +75,7 @@ GLIMPSE requires input data to take the form of Genotype Likelihoods (GLs). GLs 
 
 For that, I first need to generate different VCF files, one for each sample extracted (that will serve as a reference panel for its downsampled BAM). I will run the custom script [sample_removal_vcf_downsampling.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/sample_removal_vcf_downsampling.sh) <input_vcf>, which also generates the TSV files necessary for bcftools to calculate the genotypes likelihoods.
 ```bash
-sbatch --mem=1GB -t 00:20:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/sample_removal_vcf_downsampling.sh /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf.gz
+sbatch --mem=1GB -t 00:20:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/sample_removal_vcf_downsampling.sh /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf.gz
 
 # I moved all the generated files to a new directory
 mv * ref_panels/
@@ -85,17 +85,17 @@ Now we can compute the GLs using BCFtools with the custom script [gl_bcftools_do
 
 ```bash
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*0_5x.bam); do
-  job_id=$(sbatch --mem=2GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation/ref_panels | awk '{print $4}')
+  job_id=$(sbatch --mem=2GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation/ref_panels | awk '{print $4}')
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/downsampling/job_ids_gl_bcftools_downsampled.txt
 done
 
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*1x.bam); do
-  job_id=$(sbatch --mem=2GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation/ref_panels | awk '{print $4}')
+  job_id=$(sbatch --mem=2GB -t 00:10:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation/ref_panels | awk '{print $4}')
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/downsampling/job_ids_gl_bcftools_downsampled.txt
 done
 
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/novogene_lp_sept23/downsampling/*2x.bam); do
-  job_id=$(sbatch --mem=2GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation/ref_panels | awk '{print $4}')
+  job_id=$(sbatch --mem=2GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/gl_bcftools_downsampled.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation/ref_panels | awk '{print $4}')
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/downsampling/job_ids_gl_bcftools_downsampled.txt
 done
 ```
