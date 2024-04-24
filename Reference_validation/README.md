@@ -114,4 +114,8 @@ sbatch -t 1-00:00:00 --mem 3GB /home/csic/eye/lmf/scripts/Phasing_and_imputation
 ALL.sh # job ID: 6863781
 ````
 
- 
+### Ligation
+
+### Sampling haplotypes
+
+### Concordance
