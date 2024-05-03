@@ -102,22 +102,53 @@ done
 
 ---
 
- ## Reference panel imputation
+## Reference panel imputation
 
- Once the BAMs of the samples in the reference panel are downsampled to different target coverages and their GLs are computed, we can start using GLIMPSE to impute them.
+Once the BAMs of the samples in the reference panel are downsampled to different target coverages and their GLs are computed, we can start using GLIMPSE to impute them.
 
- Note: all these scripts were executed when GLIMPSEv1.1 was still not installed in CESGA ft3. I had to download the docker image and run the scripts a little bit differently.
+Note: all these scripts were executed when GLIMPSEv1.1 was still not installed in CESGA ft3. I had to download the docker image and run the scripts a little bit differently. I need to first opne the Docker image, using the script [launch_scriptGLIMPSE_downsampling.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/launch_scriptGLIMPSE_downsampling.sh), followed by the script I want to run afterwards.
 
- ### Chunks definition
+Following [GLIMPSE1 tutorial](https://odelaneau.github.io/GLIMPSE/glimpse1/tutorial_b38.html#run_preliminaries), I run one script per stage of the whole imputation process.
+ 
+
+### Chunks definition
+
+I tried generating one script per sample, but the image was "broken" when running simultaneouly. In the end, I decide to generate a script with a loop that does them all at the same time (not ideal, but it worked and it didn't take that long). To define the chunks, I run the custom script [chunks_GLIMPSE_downsampling_udocker_ALL.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/launch_scriptGLIMPSE_downsampling.sh) inside the Docker image.
+
+ ```{bash}
+sbatch -t 00:30:00 --mem 3GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/launch_scriptGLIMPSE_downsampling.sh \
+/home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/chunks_GLIMPSE_downsampling_udocker_ALL.sh   
+```
+This steps generates one TXT file per chunk.
 
  ### Phasing
+
+ Once the chunks are generated, next step consistf of performing the phasing and imputation of missing genotypes, running the script [phase_GLIMPSE_downsampling_udocker_ALL.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/phase_GLIMPSE_downsampling_udocker_ALL.sh).
+
  ```bash
-sbatch -t 1-00:00:00 --mem 3GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/launch_phase_downsampling_
-ALL.sh # job ID: 6863781
+sbatch -t 1-00:00:00 --mem 3GB 
+/home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/launch_scriptGLIMPSE_downsampling.sh \
+/home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/phase_GLIMPSE_downsampling_udocker_ALL.sh
 ````
 
 ### Ligation
 
+After phasing and imputation, one BCF is generated per chunk. The next step consists of merging all the chunk files of the same chromosome with the custom script [ligate_GLIMPSE_downsampling_udocker_ALL.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/ligate_GLIMPSE_downsampling_udocker_ALL.sh).
+
+ ```bash
+sbatch -t 02:00:00 --mem 2GB
+/home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/launch_scriptGLIMPSE_downsampling.sh \
+/home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/ligate_GLIMPSE_downsampling_udocker_ALL.sh
+````
+
 ### Sampling haplotypes
+
+This step outputs phased genotypes. We run the script [sample_GLIMPSE_downsampling_udocker_ALL.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/sample_GLIMPSE_downsampling_udocker_ALL.sh).
+
+ ```bash
+sbatch -t 01:00:00 --mem 2GB
+/home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/launch_scriptGLIMPSE_downsampling.sh \
+/home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/sample_GLIMPSE_downsampling_udocker_ALL.sh
+````
 
 ### Concordance
