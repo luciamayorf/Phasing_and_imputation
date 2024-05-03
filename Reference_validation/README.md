@@ -106,6 +106,8 @@ done
 
  Once the BAMs of the samples in the reference panel are downsampled to different target coverages and their GLs are computed, we can start using GLIMPSE to impute them.
 
+ Note: all these scripts were executed when GLIMPSEv1.1 was still not installed in CESGA ft3. I had to download the docker image and run the scripts a little bit differently.
+
  ### Chunks definition
 
  ### Phasing
