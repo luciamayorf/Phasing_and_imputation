@@ -152,3 +152,28 @@ sbatch -t 01:00:00 --mem 2GB
 ````
 
 ### Concordance
+
+#### Files preparation
+
+For the concordance, I'm first going to merge all the autosomal BCF files of each sample (X chromosome should be imputed separately, following this [tutorial](https://odelaneau.github.io/GLIMPSE/glimpse1/tutorial_chrX.html). 
+
+Note: this step should be performed after the other steps are completed (specially after the sampling step, as, the way it's designed, it uses all the VCFs present in the output folder of the ligation step). 
+
+To merge the BCfs, we use [bcftools concat](https://samtools.github.io/bcftools/bcftools.html#concat) running the script [concat_ligated_autosomal_bcfs.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/concat_ligated_autosomal_bcfs.sh).
+```bash
+sbatch -t 00:30:00 --mem 1GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/concat_ligated_autosomal_bcfs.sh
+```
+Afterwards, we merge the BCFs from all the imputed samples (separating them by coverage), using the custom script [merge_all_autosomal_bcfs.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/merge_all_autosomal_bcfs.sh).
+
+```bash
+sbatch -t 00:20:00 --mem 2GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/merge_all_autosomal_bcfs.sh
+```
+Finally, I need to filter out the SNPs that are not found in the autosomes for the true genotypes dataset (our final but unphased VCF).
+
+```bash
+zcat c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss_originalnames.vcf.gz | grep -v "ChrY" | grep -v "ChrX" | grep -v "scaffold" > ref_panel_validation/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss_originalnames_autosomes.vcf
+```
+
+#### Checking the concordance
+
+We test the concordance using [bcftools stats](https://samtools.github.io/bcftools/bcftools.html#stats).
