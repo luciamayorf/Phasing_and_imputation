@@ -42,7 +42,7 @@ for (i in seq_len(num_groups)) {
   p_gp_group <- ggplot(data_group, aes(x = MaxGenotypeProb)) +
     geom_histogram(binwidth = 0.01, color = "black") +
     facet_wrap(~ Sample, ncol = 2) +
-    labs(title = paste("Histogram of maximum genotype probabilities for", base_name, "group", i), x = "Maximum genotype probability", y = "Number of SNPs")
+    labs(title = paste("Histogram of maximum genotype probabilities for", base_name, "group", i), x = "Maximum genotype probability", y = "Number of genotypes")
   
   # Save the plot to a PDF file
   ggsave(file.path(path, paste0(base_name, "_group", i, ".pdf")), p_gp_group)
