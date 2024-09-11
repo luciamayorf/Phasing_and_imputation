@@ -17,7 +17,7 @@ print("MaxGP data loaded")
 # Create the global maxGP histogram
 p_gp <- ggplot(data_gp, aes(x = MaxGenotypeProb)) +
   geom_histogram(binwidth = 0.01, color = "black") +
-  labs(title = paste("Histogram of maximum genotype probabilities for", base_name), x = "Maximum genotype probability", y = "Number of SNPs")
+  labs(title = paste("Histogram of maximum genotype probabilities for", base_name), x = "Maximum genotype probability", y = "Number of genotypes")
 
 # Save the plot to a PDF file
 ggsave(file.path(path, paste0(base_name, ".pdf")), p_gp)
