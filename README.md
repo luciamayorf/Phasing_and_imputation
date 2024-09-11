@@ -119,20 +119,28 @@ for input_bam in $(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1
   job_id=$(sbatch --mem=3GB -t 00:20:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools.sh ${input_bam} /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf.gz /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/old_sequences/genotypes_likelihoods/medcov | awk '{print $4}')
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_gl_bcftools.txt
 done
+
+# For the genome project samples
+for input_bam in $(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/old_sequences/*_mLynPar1.2_ref_sorted_rg_merged_sorted_rmdup_indelrealigner.bam | grep -f <(cut -f15 -d'/' /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_gvcfs/old_sequences/list_gvcfs_old_sequences_highcov.txt | cut -f1-4 -d'_')); do
+  job_id=$(sbatch --mem=2GB -t 01:00:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools.sh ${input_bam} /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf.gz /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/old_sequences/genotypes_likelihoods/genome_project | awk '{print $4}')
+  echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_gl_bcftools.txt
+done
 ```
 
 As GLIMPSE version 1.1 performs a multi-target imputation, the GLs of the different samples must be merged together to generate a single VCF. 
 
 ```bash
 # generate the list of the vcfs to be merged:
-ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/*_GL.vcf.gz > /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/list_epil_medcov.txt
-ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/old_sequences/genotypes_likelihoods/medcov/*_GL.vcf.gz >> /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/list_epil_medcov.txt
+ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/*_GL.vcf.gz > /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/list_epil_medcov_gp.txt
+ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/old_sequences/genotypes_likelihoods/medcov/*_GL.vcf.gz >> /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/list_epil_medcov_gp.txt
+ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/old_sequences/genotypes_likelihoods/genome_project/*_GL.vcf.gz >> /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/list_epil_medcov_gp.txt
 
-# merge, separate by chromosomes and index the vcfs containing the GLs of the medium coverage and the epil samples:
+
+# merge, separate by chromosomes and index the vcfs containing the GLs of the gp, the medium coverage and the epil samples:
 module load samtools
 for chr in $(cut -f1 /mnt/netapp2/Store_csebdjgl/reference_genomes/lynx_pardinus_mLynPar1.2/mLynPar1.2.big_chromosomes.bed); do
-  bcftools merge -m none -r ${chr} -Oz -o /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/epil_medcov_GL_merged.${chr}.vcf.gz -l /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/list_epil_medcov.txt
-  bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/epil_medcov_GL_merged.${chr}.vcf.gz
+  bcftools merge -m none -r ${chr} -Oz -o /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/genotypes_likelihoods/epil_medcov_gp_GL_merged.${chr}.vcf.gz -l /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/list_epil_medcov_gp.txt
+  bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/genotypes_likelihoods/epil_medcov_gp_GL_merged.${chr}.vcf.gz
 done
 ```
 
@@ -151,8 +159,8 @@ done
 I use the custom script [phase_GLIMPSE.sh](https://github.com/luciamayorf/Phasing_and_imputation/tree/main/scripts/imputation). This step imputates the genotypes, generating one bcf file per chunk.
 
 ```{bash}
-for vcf_gl in $(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/epil_medcov_GL_merged.*.vcf.gz); do
-  job_id=$(sbatch -t 01:30:00 --mem 2GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/phase_GLIMPSE.sh ${vcf_gl} /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf.gz | awk '{print $4}')
+for vcf_gl in $(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/genotypes_likelihoods/epil_medcov_gp_GL_merged.*.vcf.gz | grep -v "ChrX"); do
+  job_id=$(sbatch -t 01:00:00 --mem 2GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/phase_GLIMPSE.sh ${vcf_gl} /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf.gz | awk '{print $4}')
   echo "${job_id} ${chr}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_phase.txt
 done
 ```
@@ -161,9 +169,8 @@ done
 Later, the all the bcf files generated need to be ligated for each chromosome, using the script [ligate_GLIMPSE.sh](https://github.com/luciamayorf/Phasing_and_imputation/tree/main/scripts/imputation)
 
 ```bash
-```{bash}
-for chr_dir in $(ls -d /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_phase/*); do
-  job_id=$(sbatch -t 00:30:00 --mem 2GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/ligate_GLIMPSE.sh ${chr_dir} epil_medcov | awk '{print $4}')
+for chr_dir in $(ls -d /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_phase/*); do
+  job_id=$(sbatch -t 00:20:00 --mem 2GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/ligate_GLIMPSE.sh ${chr_dir} epil_medcov_gp | awk '{print $4}')
   echo "${job_id} ${chr_dir}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_ligate.txt
 done
 ```
@@ -172,24 +179,24 @@ done
 
 This steps phases the genotypes, following the script [sample_GLIMPSE.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/imputation/sample_GLIMPSE.sh)
 ```bash
-for bcf in $(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_ligate/*.bcf); do
+for bcf in $(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_ligate/*.bcf); do
   job_id=$(sbatch -t 00:20:00 --mem 1GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/sample_GLIMPSE.sh ${bcf} | awk '{print $4}')
   echo "${job_id} ${bcf}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_sample.txt
 done
 ```
 
-### Concatenating automes files
+### Concatenating autosomes files
 
 As a final step, we want to merge all the individual autosomes files into a single file, for both the sampled and ligated BCFs. 
 
 ```bash
 # concatenate and index the ligated files
-bcftools concat $(find /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_ligate -name "*.bcf" | grep -v "ChrX") -O b -o /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_ligate/epil_medcov_autosomes.bcf
-bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_ligate/epil_medcov_autosomes.bcf
+bcftools concat $(find /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_ligate -name "*.bcf" | grep -v "ChrX") -O b -o /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_ligate/epil_medcov_gp_autosomes.bcf
+bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_ligate/epil_medcov_gp_autosomes.bcf
 
 # concatenate and index the sampled files
-bcftools concat $(find /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_sample -name "*.bcf" | grep -v "ChrX") -O b -o /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_sample/epil_medcov_autosomes_phased.bcf
-bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_sample/epil_medcov_autosomes_phased.bcf
+bcftools concat $(find /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_sample -name "*.bcf" | grep -v "ChrX") -O b -o /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_sample/epil_medcov_gp_autosomes_phased.bcf
+bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_sample/epil_medcov_gp_autosomes_phased.bcf
 ```
 ---
 
@@ -201,12 +208,45 @@ We will analyse the values of the INFO field and the maximum genotype probabilit
 
 ```bash
 # INFO file
-bcftools query -f '%INFO/INFO\n' epil_medcov_autosomes.bcf > imputation_QC/info_epil_medcov.txt
+bcftools query -f '%INFO/INFO\n' epil_medcov_gp_autosomes.bcf > imputation_QC/info_epil_medcov_gp.txt
 
 # MaxGP file (number of lines is the n_SNPs*n_samples)
-bcftools query -f '[%GP\n]' epil_medcov_autosomes.bcf | awk -F',' '{print ($1>$2)?($1>$3?$1:$3):($2>$3?$2:$3)}' > imputation_QC/maxGP_epil_medcov.txt
+bcftools query -f '[%SAMPLE=%GP\n]' epil_medcov_gp_autosomes.bcf | awk -F'=' '{split($2,a,","); print $1, (a[1]>a[2])?(a[1]>a[3]?a[1]:a[3]):(a[2]>a[3]?a[2]:a[3])}' > imputation_QC/maxGP_epil_medcov_gp.txt
 ```
 
 The script [global_INFO_maxGP_plots.R](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/imputation/global_INFO_maxGP_plots.R) plots these two distributions
 ```bash
-Rscript /home/csic/eye/lmf/scripts/Phasing_and_imputation/global_info_maxGP_plots.R /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_ligate/imputation_QC epil_medcov
+Rscript /home/csic/eye/lmf/scripts/Phasing_and_imputation/imputation_QC/global_info_maxGP_plots.R /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_ligate/imputation_QC epil_medcov_gp
+```
+
+### Individual QC
+
+We are going to analyze the individual patterns of the maxGP, by individual samples and by sequencing batchs (pool_epil, gp and medcov), by first diving the BCFs:
+
+```bash
+# To separate the BCF per batch
+bcftools view -S <(cut -f15 -d'/' /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_gvcfs/old_sequences/list_gvcfs_old_sequences_medcov.txt | cut -f1-4 -d'_') epil_medcov_autosomes.bcf > medcov_autosomes.vcf
+bcftools view -S <(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/c_lp_*.vcf.gz | awk -F'/' '{print $NF}' | cut -f1-4 -d'_') epil_medcov_autosomes.bcf > epil_autosomes.vcf
+bcftools view -S <(cut -f15 -d'/' /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_gvcfs/old_sequences/list_gvcfs_old_sequences_highcov.txt | cut -f1-4 -d'_') epil_medcov_gp_autosomes.bcf > gp_autosomes.vcf
+
+ ## CAREFUL, AF and INFO tags are not recalculated, but I only want to keep the maxGPs.
+
+# To obtain the maxGP tables
+for vcf in $(ls *_autosomes.vcf); do
+    BATCH=$(echo ${vcf} | sed 's/_autosomes.vcf//')
+    echo "Processing ${vcf}"
+    bcftools query -f '[%SAMPLE=%GP\n]' ${vcf} | awk -F'=' '{split($2,a,","); print $1, (a[1]>a[2])?(a[1]>a[3]?a[1]:a[3]):(a[2]>a[3]?a[2]:a[3])}' > imputation_QC/maxGP_per_sample_${BATCH}.txt
+done
+```
+These tables contain one row PER GENOTYPE, containing the sample name and the max GP for that genotype. As a result, samples appear as many times as genotypes they have.
+
+Plots of these distributions can be obtained with [maxGP_plot.R](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/imputation/maxGP_plot.R)
+
+```bash
+for vcf in $(ls *_autosomes.vcf); do
+    BATCH=$(echo ${vcf} | sed 's/_autosomes.vcf//')
+    echo "Generating plots of ${BATCH}"
+    Rscript /home/csic/eye/lmf/scripts/Phasing_and_imputation/imputation_QC/maxGP_plot.R /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_ligate/imputation_QC maxGP_per_sample_${BATCH}
+done
+```
+
