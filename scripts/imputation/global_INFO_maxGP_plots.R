@@ -22,7 +22,13 @@ print("MaxGP data loaded")
 count <- sum(data_info$INFO > 0.9)
 print(paste("Number of SNPs with INFO value > 0.9:", count))
 
+# Count the number of SNPs with an INFO value higher than 0.95
+count <- sum(data_info$INFO > 0.95)
+print(paste("Number of SNPs with INFO value > 0.95:", count))
 
+# Count the number of SNPs with an INFO value higher than 0.99
+count <- sum(data_info$INFO > 0.99)
+print(paste("Number of SNPs with INFO value > 0.99:", count))
 ### GLOBAL PLOTS ###
 
 # Create the global info and MaxGP histograms
@@ -32,7 +38,7 @@ p_info <- ggplot(data_info, aes(x = INFO)) +
 
 p_gp <- ggplot(data_gp, aes(x = MaxGenotypeProbability)) +
   geom_histogram(binwidth = 0.01, color = "black") +
-  labs(title = paste("Histogram of maxGP for", base_name), x = "Maximum genotype probability", y = "Number of SNPs")
+  labs(title = paste("Histogram of maxGP for", base_name), x = "Maximum genotype probability", y = "Number of genotypes")
 
 # Save the plot to a PDF file
 ggsave(file.path(path, paste0("info_", base_name, ".pdf")), p_info)
