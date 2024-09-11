@@ -136,6 +136,58 @@ for chr in $(cut -f1 /mnt/netapp2/Store_csebdjgl/reference_genomes/lynx_pardinus
 done
 ```
 
+### Chunks definition
 
+This step only needs to be run once for the reference panel. I generated a custom script [chunks_GLIMPSE.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/imputation/chunks_GLIMPSE.sh). 
+```bash
+for chr in $(cut -f1 /mnt/netapp2/Store_csebdjgl/reference_genomes/lynx_pardinus_mLynPar1.2/mLynPar1.2.big_chromosomes.bed); do
+  job_id=$(sbatch -t 00:10:00 --mem 2GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/chunks_GLIMPSE.sh ${chr} /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf.gz| awk '{print $4}')
+  echo "${job_id} ${chr}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_chunks.txt
+done
+```
 
+### Phasing
 
+I use the custom script [phase_GLIMPSE.sh](https://github.com/luciamayorf/Phasing_and_imputation/tree/main/scripts/imputation). This step imputates the genotypes, generating one bcf file per chunk.
+
+```{bash}
+for vcf_gl in $(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/epil_medcov_GL_merged.*.vcf.gz); do
+  job_id=$(sbatch -t 01:30:00 --mem 2GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/phase_GLIMPSE.sh ${vcf_gl} /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf.gz | awk '{print $4}')
+  echo "${job_id} ${chr}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_phase.txt
+done
+```
+### Ligation
+
+Later, the all the bcf files generated need to be ligated for each chromosome, using the script [ligate_GLIMPSE.sh](https://github.com/luciamayorf/Phasing_and_imputation/tree/main/scripts/imputation)
+
+```bash
+```{bash}
+for chr_dir in $(ls -d /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_phase/*); do
+  job_id=$(sbatch -t 00:30:00 --mem 2GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/ligate_GLIMPSE.sh ${chr_dir} epil_medcov | awk '{print $4}')
+  echo "${job_id} ${chr_dir}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_ligate.txt
+done
+```
+
+### Sampling
+
+This steps phases the genotypes, following the script [sample_GLIMPSE.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/imputation/sample_GLIMPSE.sh)
+```bash
+for bcf in $(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_ligate/*.bcf); do
+  job_id=$(sbatch -t 00:20:00 --mem 1GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/sample_GLIMPSE.sh ${bcf} | awk '{print $4}')
+  echo "${job_id} ${bcf}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_sample.txt
+done
+```
+
+### Concatenating automes files
+
+As a final step, we want to merge all the individual autosomes files into a single file, for both the sampled and ligated BCFs. 
+
+```bash
+# concatenate and index the ligated files
+bcftools concat $(find /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_ligate -name "*.bcf" | grep -v "ChrX") -O b -o /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_ligate/epil_medcov_autosomes.bcf
+bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_ligate/epil_medcov_autosomes.bcf
+
+# concatenate and index the sampled files
+bcftools concat $(find /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_sample -name "*.bcf" | grep -v "ChrX") -O b -o /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_sample/epil_medcov_autosomes_phased.bcf
+bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_sample/epil_medcov_autosomes_phased.bcf
+```
