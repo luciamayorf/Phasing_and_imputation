@@ -104,13 +104,38 @@ bcftools query -f'%CHROM\t%POS\t%REF,%ALT\n' c_lp_all_novogene_sept23_mLynPar1.2
 tabix -s1 -b2 -e2 c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.tsv.gz
 ```
 
-Then I can compute the GLs using BCFtools with the custom script [gl_bcftools.sh]() <input_bam> <reference_vcf> <output_directory>.
+Then I can compute the GLs using BCFtools with the custom script [gl_bcftools.sh]() <input_bam> <reference_vcf> <output_directory>. The output of the script is one VCF per sample that contains the GLs in the PL field of all the targeted variants.
+
+In this case we are going to impute three different sets of samples: the low-coverage epileptic set, the medium coverage samples and the genome project ones. I will compute their GLs separately.
 ```{bash}
+# For the epileptic set
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/pool_epil_all/*_mLynPar1.2_ref_sorted_rg_merged_sorted_rmdup_indelrealigner.bam); do
   job_id=$(sbatch --mem=2GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools.sh ${input_bam} /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf.gz /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_all/genotypes_likelihoods | awk '{print $4}')
   echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_gl_bcftools.txt
 done
+
+# For the medium coverage set
+for input_bam in $(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/old_sequences/*_mLynPar1.2_ref_sorted_rg_merged_sorted_rmdup_indelrealigner.bam | grep -f <(cut -f15 -d'/' /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_gvcfs/old_sequences/list_gvcfs_old_sequences_medcov.txt | cut -f1-4 -d'_')); do
+  job_id=$(sbatch --mem=3GB -t 00:20:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/gl_bcftools.sh ${input_bam} /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf.gz /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/old_sequences/genotypes_likelihoods/medcov | awk '{print $4}')
+  echo "${job_id} ${input_bam}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_gl_bcftools.txt
+done
 ```
+
+As GLIMPSE version 1.1 performs a multi-target imputation, the GLs of the different samples must be merged together to generate a single VCF. 
+
+```bash
+# generate the list of the vcfs to be merged:
+ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/*_GL.vcf.gz > /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/list_epil_medcov.txt
+ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/old_sequences/genotypes_likelihoods/medcov/*_GL.vcf.gz >> /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/list_epil_medcov.txt
+
+# merge, separate by chromosomes and index the vcfs containing the GLs of the medium coverage and the epil samples:
+module load samtools
+for chr in $(cut -f1 /mnt/netapp2/Store_csebdjgl/reference_genomes/lynx_pardinus_mLynPar1.2/mLynPar1.2.big_chromosomes.bed); do
+  bcftools merge -m none -r ${chr} -Oz -o /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/epil_medcov_GL_merged.${chr}.vcf.gz -l /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/list_epil_medcov.txt
+  bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/genotypes_likelihoods/epil_medcov_GL_merged.${chr}.vcf.gz
+done
+```
+
 
 
 
