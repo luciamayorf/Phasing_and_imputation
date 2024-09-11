@@ -191,3 +191,22 @@ bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_r
 bcftools concat $(find /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_sample -name "*.bcf" | grep -v "ChrX") -O b -o /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_sample/epil_medcov_autosomes_phased.bcf
 bcftools index -f /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_sample/epil_medcov_autosomes_phased.bcf
 ```
+---
+
+## 3. Imputation QC
+
+### Global QC
+
+We will analyse the values of the INFO field and the maximum genotype probability (maxGP - each genotype has 3 probabilities: probability of the genotype being AA, AB or BB). 
+
+```bash
+# INFO file
+bcftools query -f '%INFO/INFO\n' epil_medcov_autosomes.bcf > imputation_QC/info_epil_medcov.txt
+
+# MaxGP file (number of lines is the n_SNPs*n_samples)
+bcftools query -f '[%GP\n]' epil_medcov_autosomes.bcf | awk -F',' '{print ($1>$2)?($1>$3?$1:$3):($2>$3?$2:$3)}' > imputation_QC/maxGP_epil_medcov.txt
+```
+
+The script [global_INFO_maxGP_plots.R](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/imputation/global_INFO_maxGP_plots.R) plots these two distributions
+```bash
+Rscript /home/csic/eye/lmf/scripts/Phasing_and_imputation/global_info_maxGP_plots.R /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov/GLIMPSE_ligate/imputation_QC epil_medcov
