@@ -5,7 +5,7 @@
 # This script merges the autosomal bcfs obtained from the whole imputation process.
 
 # Load the bcftools module
-module load samtools
+module load bcftools
 
 # Define the input directory
 INPUT_DIR=/mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/ref_panel_validation/GLIMPSE_ligate
