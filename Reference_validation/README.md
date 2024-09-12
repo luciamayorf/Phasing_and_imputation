@@ -165,9 +165,13 @@ sbatch -t 00:30:00 --mem 1GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/r
 ```
 Afterwards, we merge the BCFs from all the imputed samples (separating them by coverage), using the custom script [merge_all_autosomal_bcfs.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/reference_validation/merge_all_autosomal_bcfs.sh).
 
+NOTE: careful, with the merging, allelic frequencies and INFO imputation score are not recalculated. I modified the script so that they are:
 ```bash
 sbatch -t 00:20:00 --mem 2GB /home/csic/eye/lmf/scripts/Phasing_and_imputation/ref_panel_validation/merge_all_autosomal_bcfs.sh
 ```
+
+
+
 Finally, I need to filter out the SNPs that are not found in the autosomes for the true genotypes dataset (our final but unphased VCF).
 
 ```bash
