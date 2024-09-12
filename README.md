@@ -250,3 +250,19 @@ for vcf in $(ls *_autosomes.vcf); do
 done
 ```
 
+We also want to obtain a general metric per individual, based on the maxGP. We decided to study the number of SNPs with a maxGP under 0.95 per sample (a way to measure how many genotypes would not be reliable). To get those tables:
+
+```bash
+for vcf in $(ls *_autosomes.vcf); do
+    BATCH=$(echo ${vcf} | sed 's/_autosomes.vcf//')
+    echo "Generating maxGP< 0.95 table of ${BATCH}"
+    
+    for sample in $(bcftools query -l ${vcf}); do
+      MAXGP=$(grep "${sample}" imputation_QC/maxGP_per_sample_${BATCH}.txt | awk '$2 < 0.95' | wc -l)
+      echo "${sample} ${MAXGP}" >> imputation_QC/maxGP095_per_sample_${BATCH}.txt
+    done
+    
+done
+```
+
+
