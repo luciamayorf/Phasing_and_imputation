@@ -14,7 +14,7 @@ vcf_dir=$(dirname ${input_vcf})
 mkdir -p ${vcf_dir}/gmaps
 
 # define input vcf basename
-vcf_basename=$(basename ${input_vcf} .vcf)
+vcf_basename=$(basename ${input_vcf} .vcf.gz)
 
 # define list of chromosomes
 chr_list=${2}
@@ -23,10 +23,10 @@ chr_list=${2}
 for chr in $(cut -f1 ${chr_list}) ; do
     echo "calculating genetic map of ${chr} from ${input_vcf}"
     chr_name=$(echo "${chr}" | cut -d'_' -f2-)
-    grep -v "#" ${input_vcf} | grep -w ${chr} | cut -f1,2 |
+    zgrep -v "#" ${input_vcf} | grep -w ${chr} | cut -f1,2 |
     awk '{ print $2, $1 }' |
     awk {'if ( NR==1 ) print $1, $2, 0; else print $1, $2, $1-p, ($1-p)*0.0000019; p=$1'} |
-    awk 'BEGIN{print "pos", "chr", "cM"} {sum+=$4} {print $1, $2, sum}' |
+    awk 'BEGIN{print "pos", "chr", "cM"} {sum+=$4} {printf "%s\t%s\t%.10f\n", $1, $2, sum}' |
     tr ' ' '\t' > ${vcf_dir}/gmaps/${vcf_basename}_${chr_name}.gmap
 done
  
