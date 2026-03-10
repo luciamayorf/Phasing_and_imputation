@@ -1,15 +1,15 @@
 # Phasing_and_imputation
 
-In this repository, I will perform the phasing and imputation of data sequenced at low-coverage using a reference panel of 50 individuals sequenced at ~25X. 
+This repository contains the scripts for  phasing and imputation of WGS data sequenced at low-coverage, using a reference panel of 50 individuals of high-coverage   (~25X) Iberian lynx individuals. 
 
 
 ## 1. Reference panel VCF phasing
 
-First of all, we need to phase the VCF of the reference panel (50 high coverage sequenced individuals). For that, I will used the combined [WhatsHap v1.1](https://whatshap.readthedocs.io/en/latest/index.html) and [SHAPEIT4](https://odelaneau.github.io/shapeit4/) approach, as in [Enrico's Lynxtrongression repository](https://github.com/Enricobazzi/Lynxtrogression).
+First of all, we need to phase the VCF of the reference panel. For that, I will used the combined [WhatsHap v1.1](https://whatshap.readthedocs.io/en/latest/index.html) and [SHAPEIT4](https://odelaneau.github.io/shapeit4/) approach, as in [Enrico's Lynxtrongression repository](https://github.com/Enricobazzi/Lynxtrogression).
 
 The following pipeline first uses WhatsHap to create phase sets from individual read and population data. The output of WhatsHap is then passed to SHAPEIT4, that will infer the haplotypes of each sample for each chromosome.
 
-I need to change the name of the samples again in the VCF because they need to match the read groups from the BAM files for WhatsHap. I should've changed them before doing the alignment to avoid this extra steps (carefull, the order of the samples was alphabetically changed in the step 2 of the filtering):
+I need to change the name of the samples again in the VCF because they need to match the read groups from the BAM files for WhatsHap (carefull, the order of the samples was alphabetically changed in the step 2 of the filtering):
 
 ```bash
 module load samtools
@@ -18,7 +18,7 @@ bcftools reheader -s <(sort -k2 /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/l
 
 ### Splitting the VCF into chromosomes
 
-To divide my VCF into single chromosome VCFs I ran a custom bash script [chr_vcf_split.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/phasing/chr_vcf_split.sh) <input_vcf> <chr_bed>. The chromosomes I decided to keep are the larger ones: 18 autosomes and the X chromosome.
+To divide my VCF into single chromosome VCFs, I ran a custom bash script [chr_vcf_split.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/phasing/chr_vcf_split.sh) <input_vcf> <chr_bed>. We first decide to keep the autosomes the 18 autosomes and the X chromosome.
 
 ```bash
 sbatch --mem=5GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/chr_vcf_split.sh /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss_originalnames.vcf /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/reference_genomes/lynx_pardinus_mLynPar1.2/mLynPar1.2.big_chromosomes.bed
@@ -26,7 +26,7 @@ sbatch --mem=5GB -t 00:15:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/c
 
 ### Generate genetic map
 
-To run SHAPEIT4 I also need to provide a genetic map for the SNPs to phase. As we don't have one, we will manually generate a genetic map by multiplying the physical distance in bp between SNPs and genome wide average recombination rate, which is 1.9 cM/Mbp. By cumulatively summing the multiplication of the physical distance from previous the SNP by 0.0000019, we obtain the cM value of each SNP. This approximation is not ideal but it's the only way we can provide a map. To calculate this I wrote a custom script [make_chr_gmap.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/phasing/make_chr_gmap.sh) <input_vcf> <chr_bed> which will output a gmap table for each chromosome, made of 3 columns: position, chromosome, cM (format useful for SHAPEIT4).
+To run SHAPEIT4, I also need to provide a genetic map for the SNPs to phase. As we don't have one, we will manually generate a genetic map by multiplying the physical distance in bp between SNPs and genome wide average recombination rate of the domestic cat (1.9 cM/Mbp). By cumulatively summing the multiplication of the physical distance from previous the SNP by 0.0000019, we obtain the cM value of each SNP. To generate the map, I wrote a custom script [make_chr_gmap.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/phasing/make_chr_gmap.sh) <input_vcf> <chr_bed>, which will output a gmap table for each chromosome, made of 3 columns: position, chromosome, cM (format useful for SHAPEIT4).
 
 ```bash
 sbatch --mem=5GB -t 00:30:00 /home/csic/eye/lmf/scripts/Phasing_and_imputation/make_chr_gmap.sh /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss_originalnames.vcf /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/reference_genomes/lynx_pardinus_mLynPar1.2/mLynPar1.2.big_chromosomes.bed
@@ -45,7 +45,7 @@ done
 
 ### Phase using SHAPEIT4
 
-The data is now ready to be phased using SHAPEIT4. To do so in parallel, I used a custom made script [chr_vcf_shapeit.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/phasing/chr_vcf_shapeit.sh) <input_vcf>, that runs SHAPEIT4 for each chromosome, zipping the file and indexing it (necessary to run SHAPEIT4). MCMC iterations were set to "10b,1p,1b,1p,1b,1p,1b,1p,10m" as suggested by the SHAPEIT4 manual.
+The data is now ready to be phased using SHAPEIT4. To do so in parallel, I used a custom made script [chr_vcf_shapeit.sh](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/phasing/chr_vcf_shapeit.sh) <input_vcf>, that runs SHAPEIT4 for each chromosome, zipping the file and indexing it (necessary to run SHAPEIT4). MCMC iterations were set to "10b,1p,1b,1p,1b,1p,1b,1p,10m", as suggested by the SHAPEIT4 manual.
 
 ```bash
 for input_vcf in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/novogene_lp_sept23/chr_vcfs/*_ps.vcf); do 
@@ -53,7 +53,8 @@ for input_vcf in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome
     echo "${job_id} ${input_vcf}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/phasing/job_ids_chr_vcf_shapeit_novogene_lp_sept2023.txt
 done 
 ```
-We decide to keep the imputed genotypes. In the end, we are interested in providing a set of reference haplotypes. Therefore, missing genotypes only represent alternative haplotypes that would not be present in the reference panel, and would therefore be impossible to impute. In conclusion, the final set of reference haplotypes will be the similar with or without the missing genotypes. If at some point we are interested in setting those genotypes as missing for downstream analysis, check Enrico's [gt_masker_pop_chr_vcf.sh](https://github.com/Enricobazzi/Lynxtrogression/blob/main/scripts/phasing/gt_masker_pop_chr_vcf.sh) script.
+
+We decide to keep the imputed genotypes (they are very few, as we applied a very strict missingness filter for the reference panel VCF generation: maximum one missing genotype allowed per SNP). If at some point we are interested in setting those genotypes as missing for downstream analysis, check Enrico's [gt_masker_pop_chr_vcf.sh](https://github.com/Enricobazzi/Lynxtrogression/blob/main/scripts/phasing/gt_masker_pop_chr_vcf.sh) script.
 
 
 ### Phased VCF merging
@@ -72,7 +73,8 @@ bgzip c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf 
 tabix -p vcf c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.vcf
 ```
 
-We need to retrieve the old header, where most information was stripped away during phasing, otherwise I can get some errors when running different tools. To "fix" the header we simply copy the pre-phased header, add the few new fields added during phasing, and finally add the phased part of the table.
+We need to retrieve the old header, as most information was stripped away during phasing. otherwise we can get some errors in downstream analysis. To "fix" the header we simply copy the pre-phased header, add the few new fields added during phasing, and finally add the phased part of the table.
+
 ```bash
 # take pre-phased header
 grep "##" c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.vcf > c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.fixed.vcf
@@ -91,7 +93,7 @@ grep -v "##" c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phas
 
 ### Computation of genotypes likelihoods
 
-Before proceeding with imputation, I need to calculate the genotype likelihoods (GLs) of the targeted variants in our samples. For that, I will use [BCFtools](https://samtools.github.io/bcftools/bcftools.html#mpileup) mpileup and call, following [GLIMPSE manual](https://odelaneau.github.io/GLIMPSE/glimpse1/tutorial_b38.html#run_preliminaries) recommendations.
+Before proceeding with imputation, I need to calculate the genotype likelihoods (GLs) of the reference panel variants in the target samples. For that, I will use [BCFtools](https://samtools.github.io/bcftools/bcftools.html#mpileup) mpileup and call, following [GLIMPSE manual](https://odelaneau.github.io/GLIMPSE/glimpse1/tutorial_b38.html#run_preliminaries) recommendations.
 
 For that, I first need to generate and index a TSV file of the reference panel VCF. 
 ```bash
@@ -104,9 +106,9 @@ bcftools query -f'%CHROM\t%POS\t%REF,%ALT\n' c_lp_all_novogene_sept23_mLynPar1.2
 tabix -s1 -b2 -e2 c_lp_all_novogene_sept23_mLynPar1.2_ref.filter5_QUAL20_rd.miss.phased.tsv.gz
 ```
 
-Then I can compute the GLs using BCFtools with the custom script [gl_bcftools.sh]() <input_bam> <reference_vcf> <output_directory>. The output of the script is one VCF per sample that contains the GLs in the PL field of all the targeted variants.
+Then, I can compute the GLs using BCFtools with the custom script [gl_bcftools.sh]() <input_bam> <reference_vcf> <output_directory>. The output of the script is one VCF per sample that contains the GLs in the PL field of all the targeted variants.
 
-In this case we are going to impute three different sets of samples: the low-coverage epileptic set, the medium coverage samples and the genome project ones. I will compute their GLs separately.
+In this case, we are going to impute three different sets of samples: the low-coverage epileptic set, the medium coverage samples and the genome project ones. I will compute their GLs separately.
 ```{bash}
 # For the epileptic set
 for input_bam in $(ls /mnt/lustre/hsm/nlsas/notape/home/csic/ebd/jgl/lynx_genome/lynx_data/mLynPar1.2_ref_bams/pool_epil_all/*_mLynPar1.2_ref_sorted_rg_merged_sorted_rmdup_indelrealigner.bam); do
@@ -164,6 +166,7 @@ for vcf_gl in $(ls /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_
   echo "${job_id} ${chr}" >> /mnt/lustre/scratch/nlsas/home/csic/eye/lmf/logs/imputation_GLIMPSE/job_ids_phase.txt
 done
 ```
+
 ### Ligation
 
 Later, the all the bcf files generated need to be ligated for each chromosome, using the script [ligate_GLIMPSE.sh](https://github.com/luciamayorf/Phasing_and_imputation/tree/main/scripts/imputation)
@@ -214,14 +217,15 @@ bcftools query -f '%INFO/INFO\n' epil_medcov_gp_autosomes.bcf > imputation_QC/in
 bcftools query -f '[%SAMPLE=%GP\n]' epil_medcov_gp_autosomes.bcf | awk -F'=' '{split($2,a,","); print $1, (a[1]>a[2])?(a[1]>a[3]?a[1]:a[3]):(a[2]>a[3]?a[2]:a[3])}' > imputation_QC/maxGP_epil_medcov_gp.txt
 ```
 
-The script [global_INFO_maxGP_plots.R](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/imputation/global_INFO_maxGP_plots.R) plots these two distributions
+The script [global_INFO_maxGP_plots.R](https://github.com/luciamayorf/Phasing_and_imputation/blob/main/scripts/imputation/global_INFO_maxGP_plots.R) plots these two distributions.
+
 ```bash
 Rscript /home/csic/eye/lmf/scripts/Phasing_and_imputation/imputation_QC/global_info_maxGP_plots.R /mnt/netapp2/Store_csebdjgl/lynx_genome/lynx_data/mLynPar1.2_ref_vcfs/imputation_GLIMPSE/pool_epil_medcov_gp/GLIMPSE_ligate/imputation_QC epil_medcov_gp
 ```
 
 ### Individual QC
 
-We are going to analyze the individual patterns of the maxGP, by individual samples and by sequencing batchs (pool_epil, gp and medcov), by first diving the BCFs:
+We are going to analyze the individual patterns of the maxGP, by individual samples and by sequencing batchs (pool_epil, gp and medcov), diving the BCFs:
 
 ```bash
 # To separate the BCF per batch
